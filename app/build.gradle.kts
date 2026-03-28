@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -28,7 +29,12 @@ android {
             properties.load(localPropertiesFile.inputStream())
         }
         val groqApiKey = properties.getProperty("GROQ_API_KEY") ?: ""
-        buildConfigField("String", "GROQ_API_KEY", "\"$groqApiKey\"")
+        buildConfigField("String", "GROQ_API_KEY", "\"\"")
+
+        val supabaseUrl = properties.getProperty("SUPABASE_URL") ?: "https://niydkkddfqrymnpgeorr.supabase.co"
+        val supabaseAnonKey = properties.getProperty("SUPABASE_ANON_KEY") ?: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5peWRra2RkZnFyeW1ucGdlb3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2Njg1MDksImV4cCI6MjA5MDI0NDUwOX0.vJMoYfZBP4wlAo8i_0_zJRXtq_fQ2SMyjSD-epvdkgY"
+        buildConfigField("String", "SUPABASE_URL", "\"\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"\"")
     }
 
     buildTypes {
@@ -62,7 +68,7 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core-ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -85,6 +91,22 @@ dependencies {
 
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
+
+    // Supabase
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.storage)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.okhttp)
+
+    // Auth & Credentials
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services-auth)
+    implementation(libs.googleid)
+
+    // Image loading
+    implementation(libs.coil.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

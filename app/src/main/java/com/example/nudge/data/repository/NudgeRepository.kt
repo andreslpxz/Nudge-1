@@ -4,6 +4,7 @@ import com.example.nudge.data.local.NudgeDao
 import com.example.nudge.data.models.ChatMessage
 import com.example.nudge.data.models.Goal
 import com.example.nudge.data.models.Transaction
+import com.example.nudge.data.models.Profile
 import com.example.nudge.data.remote.GroqApiClient
 import com.example.nudge.data.remote.GroqMessage
 import com.example.nudge.data.remote.GroqRequest
@@ -12,7 +13,8 @@ import kotlinx.coroutines.flow.firstOrNull
 
 class NudgeRepository(
     private val nudgeDao: NudgeDao,
-    private val financeProvider: FinanceProvider
+    private val financeProvider: FinanceProvider,
+    private val authRepository: AuthRepository? = null
 ) {
     fun getGoal(): Flow<Goal?> = nudgeDao.getGoal()
 
@@ -26,8 +28,9 @@ class NudgeRepository(
 
         val currentGoal = getGoal().firstOrNull()
         val recentTransactions = getTransactions().firstOrNull() ?: emptyList()
+        val profile = authRepository?.getProfile()
 
-        val response = getAiResponse(text, currentGoal, recentTransactions)
+        val response = getAiResponse(text, currentGoal, recentTransactions, profile)
         val aiMsg = ChatMessage(text = response, isFromUser = false)
         nudgeDao.insertMessage(aiMsg)
     }
@@ -35,7 +38,8 @@ class NudgeRepository(
     private suspend fun getAiResponse(
         userInput: String,
         goal: Goal?,
-        transactions: List<Transaction>
+        transactions: List<Transaction>,
+        profile: Profile?
     ): String {
         return try {
             val goalInfo = goal?.let {
@@ -50,21 +54,25 @@ class NudgeRepository(
                 "No hay transacciones recientes."
             }
 
+            val userName = profile?.username ?: "Usuario"
+
             val systemMsg = GroqMessage(
                 role = "system",
                 content = """
                     Eres Nudge, un mentor financiero pragmático y motivador.
+                    Te diriges a ${userName}.
                     Tu objetivo es mostrar el costo de oportunidad de los gastos triviales.
 
                     Contexto del usuario:
-                    - $goalInfo
-                    - $txInfo
+                    - ${goalInfo}
+                    - ${txInfo}
 
                     Instrucciones:
                     1. Sé breve (máximo 2-3 oraciones).
                     2. Sé firme pero motivador.
                     3. Si el usuario pregunta por sus gastos, demuéstrale que los conoces.
                     4. Siempre relaciona el gasto con su meta de ahorro.
+                    5. Llama al usuario por su nombre (${userName}) de vez en cuando.
                 """.trimIndent()
             )
             val userMsg = GroqMessage(role = "user", content = userInput)
