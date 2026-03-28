@@ -4,11 +4,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nudge.ui.viewmodel.NudgeViewModel
@@ -31,30 +33,45 @@ fun ChatScreen(viewModel: NudgeViewModel) {
         LazyColumn(
             state = listState,
             modifier = Modifier.weight(1f).fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(messages) { msg ->
                 ChatBubble(msg.text, msg.isFromUser)
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        ) {
             TextField(
                 value = textInput,
                 onValueChange = { textInput = it },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Escribe un mensaje...") }
+                placeholder = { Text("Pregúntale a Nudge...") },
+                shape = RoundedCornerShape(24.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                )
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = {
-                if (textInput.isNotBlank()) {
-                    viewModel.sendMessage(textInput)
-                    textInput = ""
-                }
-            }) {
-                Text("Enviar")
+            Spacer(modifier = Modifier.width(12.dp))
+            Button(
+                onClick = {
+                    if (textInput.isNotBlank()) {
+                        viewModel.sendMessage(textInput)
+                        textInput = ""
+                    }
+                },
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.height(56.dp)
+            ) {
+                Text("Enviar", fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -68,14 +85,20 @@ fun ChatBubble(text: String, isFromUser: Boolean) {
     ) {
         Surface(
             color = if (isFromUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
-            shape = MaterialTheme.shapes.medium,
-            modifier = Modifier.widthIn(max = 280.dp)
+            shape = RoundedCornerShape(
+                topStart = 20.dp,
+                topEnd = 20.dp,
+                bottomStart = if (isFromUser) 20.dp else 4.dp,
+                bottomEnd = if (isFromUser) 4.dp else 20.dp
+            ),
+            modifier = Modifier.widthIn(max = 300.dp)
         ) {
             Text(
                 text = text,
-                modifier = Modifier.padding(12.dp),
+                modifier = Modifier.padding(16.dp),
                 color = if (isFromUser) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
-                fontSize = 14.sp
+                fontSize = 15.sp,
+                lineHeight = 20.sp
             )
         }
     }
