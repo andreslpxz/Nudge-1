@@ -4,7 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
@@ -12,6 +13,10 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -25,6 +30,7 @@ import com.example.nudge.ui.viewmodel.NudgeViewModelFactory
 import com.example.nudge.data.local.AppDatabase
 import com.example.nudge.data.repository.MockFinanceProvider
 import com.example.nudge.data.repository.NudgeRepository
+import com.example.nudge.ui.theme.GlassyBlack
 
 class MainActivity : ComponentActivity() {
     private val viewModel: NudgeViewModel by viewModels {
@@ -43,27 +49,38 @@ class MainActivity : ComponentActivity() {
                 val currentDestination = navBackStackEntry?.destination?.route
 
                 val screenTitle = when(currentDestination) {
-                    "dashboard" -> "Nudge Dashboard"
+                    "dashboard" -> "Dashboard"
                     "chat" -> "Mentor Nudge"
-                    "settings" -> "Configuración"
+                    "settings" -> "Ajustes"
                     else -> "Nudge"
                 }
 
                 Scaffold(
                     topBar = {
                         CenterAlignedTopAppBar(
-                            title = { Text(screenTitle) },
+                            title = {
+                                Text(
+                                    screenTitle,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    letterSpacing = 1.sp
+                                )
+                            },
                             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                titleContentColor = MaterialTheme.colorScheme.primary
-                            )
+                                containerColor = GlassyBlack,
+                                titleContentColor = Color.White
+                            ),
+                            modifier = Modifier.padding(bottom = 0.dp)
                         )
                     },
                     bottomBar = {
-                        NavigationBar {
+                        NavigationBar(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            tonalElevation = 8.dp
+                        ) {
                             NavigationBarItem(
                                 icon = { Icon(Icons.Default.Home, contentDescription = "Dashboard") },
-                                label = { Text("Dashboard") },
+                                label = { Text("Resumen") },
                                 selected = currentDestination == "dashboard",
                                 onClick = { navController.navigate("dashboard") }
                             )
@@ -75,7 +92,7 @@ class MainActivity : ComponentActivity() {
                             )
                             NavigationBarItem(
                                 icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-                                label = { Text("Configuración") },
+                                label = { Text("Ajustes") },
                                 selected = currentDestination == "settings",
                                 onClick = { navController.navigate("settings") }
                             )
