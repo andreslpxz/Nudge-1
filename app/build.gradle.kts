@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.compose.compiler) // Nuevo plugin para Kotlin 2.0
     id("kotlin-kapt")
     alias(libs.plugins.kotlin.serialization)
 }
@@ -19,31 +20,28 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
+        vectorDrawables { useSupportLibrary = true }
 
+        // Carga de Propiedades
         val properties = Properties()
         val localPropertiesFile = rootProject.file("local.properties")
         if (localPropertiesFile.exists()) {
             properties.load(localPropertiesFile.inputStream())
         }
+        
         val groqApiKey = properties.getProperty("GROQ_API_KEY") ?: ""
-        buildConfigField("String", "GROQ_API_KEY", "\"\"")
+        val supabaseUrl = properties.getProperty("SUPABASE_URL") ?: ""
+        val supabaseAnonKey = properties.getProperty("SUPABASE_ANON_KEY") ?: ""
 
-        val supabaseUrl = properties.getProperty("SUPABASE_URL") ?: "https://niydkkddfqrymnpgeorr.supabase.co"
-        val supabaseAnonKey = properties.getProperty("SUPABASE_ANON_KEY") ?: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5peWRra2RkZnFyeW1ucGdlb3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2Njg1MDksImV4cCI6MjA5MDI0NDUwOX0.vJMoYfZBP4wlAo8i_0_zJRXtq_fQ2SMyjSD-epvdkgY"
-        buildConfigField("String", "SUPABASE_URL", "\"\"")
-        buildConfigField("String", "SUPABASE_ANON_KEY", "\"\"")
+        buildConfigField("String", "GROQ_API_KEY", "\"$groqApiKey\"")
+        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
     compileOptions {
@@ -57,9 +55,7 @@ android {
         compose = true
         buildConfig = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.10"
-    }
+    // IMPORTANTE: En Kotlin 2.0 ya no se usa composeOptions.kotlinCompilerExtensionVersion
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -68,7 +64,7 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core-ktx)
+    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -98,11 +94,10 @@ dependencies {
     implementation(libs.supabase.postgrest)
     implementation(libs.supabase.storage)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.okhttp)
 
     // Auth & Credentials
     implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services-auth)
+    implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
 
     // Image loading
