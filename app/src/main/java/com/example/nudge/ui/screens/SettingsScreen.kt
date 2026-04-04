@@ -34,7 +34,12 @@ fun SettingsScreen(viewModel: AuthViewModel) {
     val context = LocalContext.current
 
     var showNameDialog by remember { mutableStateOf(false) }
-    var newUsername by remember { mutableStateOf(profile?.username ?: "") }
+    var newUsername by remember { mutableStateOf("") }
+
+    // Update newUsername when profile changes
+    LaunchedEffect(profile) {
+        profile?.username?.let { newUsername = it }
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -61,7 +66,7 @@ fun SettingsScreen(viewModel: AuthViewModel) {
             modifier = Modifier
                 .size(120.dp)
                 .clip(CircleShape)
-                .background(Color.Gray)
+                .background(Color.Gray.copy(alpha = 0.3f))
                 .clickable { launcher.launch("image/*") },
             contentAlignment = Alignment.Center
         ) {
@@ -73,7 +78,12 @@ fun SettingsScreen(viewModel: AuthViewModel) {
                     contentScale = ContentScale.Crop
                 )
             } else {
-                Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(60.dp), tint = Color.White)
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(60.dp),
+                    tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                )
             }
         }
 
@@ -92,7 +102,7 @@ fun SettingsScreen(viewModel: AuthViewModel) {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Theme Toggle
+        // Theme Toggle Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
@@ -106,11 +116,19 @@ fun SettingsScreen(viewModel: AuthViewModel) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = if (isDarkMode) "Modo Noche (Luna)" else "Modo Sol (Luz)",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column {
+                    Text(
+                        text = "Tema Visual",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = if (isDarkMode) "Modo Noche (Luna)" else "Modo Sol (Sol)",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
                 Switch(
                     checked = isDarkMode,
                     onCheckedChange = { viewModel.toggleTheme() },
@@ -132,9 +150,12 @@ fun SettingsScreen(viewModel: AuthViewModel) {
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(24.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f))
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFE53935).copy(alpha = 0.9f),
+                contentColor = Color.White
+            )
         ) {
-            Text("Cerrar Sesión", color = Color.White, fontWeight = FontWeight.Bold)
+            Text("Cerrar Sesión", fontWeight = FontWeight.Bold)
         }
     }
 
@@ -146,12 +167,16 @@ fun SettingsScreen(viewModel: AuthViewModel) {
                 OutlinedTextField(
                     value = newUsername,
                     onValueChange = { newUsername = it },
-                    label = { Text("Nuevo nombre") }
+                    label = { Text("Nuevo nombre") },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.updateUsername(newUsername)
+                    if (newUsername.isNotBlank()) {
+                        viewModel.updateUsername(newUsername)
+                    }
                     showNameDialog = false
                 }) {
                     Text("Guardar")

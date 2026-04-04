@@ -11,11 +11,12 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.providers.builtin.OTP
+import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import java.io.File
 import java.util.UUID
 
@@ -44,10 +45,23 @@ class AuthRepository(
         }
     }
 
+    suspend fun signInWithPhone(phoneNumber: String) {
+        supabaseClient.auth.signInWith(OTP) {
+            phone = phoneNumber
+        }
+    }
+
+    suspend fun verifyPhoneOtp(phoneNumber: String, otpToken: String) {
+        supabaseClient.auth.verifyPhoneOtp(
+            type = OtpType.Phone.SMS,
+            phoneNumber = phoneNumber,
+            token = otpToken
+        )
+    }
+
     suspend fun signInWithGoogle() {
         val credentialManager = CredentialManager.create(context)
 
-        // We'll use the Web Client ID for Supabase
         val googleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
             .setServerClientId("822756700682-phoa446k7j1lqvm5p8mm12dkmcblv3ih.apps.googleusercontent.com")
@@ -74,13 +88,17 @@ class AuthRepository(
 
     suspend fun getProfile(): Profile? {
         val userId = supabaseClient.auth.currentUserOrNull()?.id ?: return null
-        return supabaseClient.postgrest["profiles"]
-            .select {
-                filter {
-                    eq("id", userId)
+        return try {
+            supabaseClient.postgrest["profiles"]
+                .select {
+                    filter {
+                        eq("id", userId)
+                    }
                 }
-            }
-            .decodeSingleOrNull<Profile>()
+                .decodeSingleOrNull<Profile>()
+        } catch (e: Exception) {
+            null
+        }
     }
 
     suspend fun updateUsername(username: String) {

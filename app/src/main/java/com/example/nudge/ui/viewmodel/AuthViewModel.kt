@@ -1,6 +1,5 @@
 package com.example.nudge.ui.viewmodel
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nudge.data.models.Profile
@@ -81,6 +80,29 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 repository.signUpWithEmail(email, pass, user)
             } catch (e: Exception) {
                 _authState.value = AuthState.Error(e.message ?: "Error al registrarse")
+            }
+        }
+    }
+
+    fun signInWithPhone(phone: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            try {
+                repository.signInWithPhone(phone)
+                _authState.value = AuthState.Idle // Ready for OTP
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error(e.message ?: "Error al enviar código")
+            }
+        }
+    }
+
+    fun verifyPhoneOtp(phone: String, token: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            try {
+                repository.verifyPhoneOtp(phone, token)
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error(e.message ?: "Código inválido")
             }
         }
     }
